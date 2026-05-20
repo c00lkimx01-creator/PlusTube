@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
-            --primary-color: #007bff;
+            --primary-color: #10aede;
             --error-color: #ff4d4f;
             --bg-light: #fdfdfd;
             --text-dark: #333333;
@@ -146,10 +146,10 @@
         }
         .custom-option:last-child { border-bottom: none; }
         .custom-option:hover { background: var(--primary-color); color: #fff; }
-        .custom-option.selected { background: rgba(0, 123, 255, 0.1); color: var(--primary-color); font-weight: 700; }
+        .custom-option.selected { background: rgba(16,174,222, 0.1); color: var(--primary-color); font-weight: 700; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .quality-btn {
-            background: rgba(0, 123, 255, 0.1); color: var(--primary-color);
+            background: rgba(16,174,222, 0.1); color: var(--primary-color);
             border: none; padding: 8px 18px; border-radius: 50px; cursor: pointer;
             font-weight: 700; font-size: 0.85rem; transition: all 0.2s;
         }
@@ -228,7 +228,7 @@
             width: 60px; height: 60px; border-radius: 50%;
             background: var(--primary-color); color: white;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; cursor: pointer; box-shadow: 0 8px 25px rgba(0,123,255,0.4);
+            font-size: 1.5rem; cursor: pointer; box-shadow: 0 8px 25px rgba(16,174,222,0.4);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .control-trigger:hover { transform: scale(1.1) rotate(90deg); }
@@ -247,7 +247,7 @@
             background: rgba(0,0,0,0.03); color: var(--text-dark);
         }
         @media (prefers-color-scheme: dark) { .control-item { background: rgba(255,255,255,0.05); } }
-        .control-item:hover { background: rgba(0,123,255,0.1); }
+        .control-item:hover { background: rgba(16,174,222,0.1); }
         .control-item.active { background: var(--primary-color); color: white; }
         .control-item i { font-size: 1.1rem; }
         .source-options { display: none; flex-direction: column; gap: 5px; padding-left: 10px; margin-top: -5px; }
@@ -465,7 +465,7 @@
                 video.play().catch(() => {});
                 showNotify("Streamソースに戻しました");
             } else {
-                let domain = type === 'nocookie' ? 'www.youtube-nocookie.com' : 'www.youtube-education.com';
+                let domain = type === 'nocookie' ? 'www.youtube-nocookie.com' : 'www.youtubeeducation.com';
                 const ytUrl = `https://${domain}/embed/{{ videoid }}?autoplay=1`;
                 video.pause();
                 video.style.display = 'none';

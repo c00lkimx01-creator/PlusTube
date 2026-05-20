@@ -56,7 +56,86 @@ async def fetch_invidious(endpoint: str, params: dict = None, force_instance: st
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    # 急上昇動画を取得してホームに表示
+    trending = []
+    try:
+        instances = list(INVIDIOUS_INSTANCES)
+        random.shuffle(instances)
+        for inst in instances[:3]:
+            try:
+                resp = await client_session.get(f"{inst.rstrip('/')}/api/v1/trending", params={"region": "JP"}, timeout=4.0)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    trending = [{
+                        "videoId": it.get("videoId"),
+                        "title": it.get("title"),
+                        "author": it.get("author"),
+                        "authorId": it.get("authorId"),
+                        "viewCountText": it.get("viewCountText") or f"{it.get('viewCount',0):,} 回視聴",
+                        "lengthSeconds": it.get("lengthSeconds", 0),
+                        "publishedText": it.get("publishedText", ""),
+                    } for it in data[:24] if it.get("videoId")]
+                    break
+            except Exception:
+                continue
+    except Exception:
+        trending = []
+    return templates.TemplateResponse("home.html", {"request": request, "trending": trending})
+
+@app.get("/api/trending")
+async def api_trending(type: str = "default"):
+    instances = list(INVIDIOUS_INSTANCES)
+    random.shuffle(instances)
+    params = {"region": "JP"}
+    if type in ("music", "gaming", "movies"):
+        params["type"] = type
+    for inst in instances[:4]:
+        try:
+            resp = await client_session.get(f"{inst.rstrip('/')}/api/v1/trending", params=params, timeout=4.0)
+            if resp.status_code == 200:
+                return resp.json()
+        except Exception:
+            continue
+    return []
+
+@app.get("/api/shorts_feed")
+async def api_shorts_feed(q: str = "shorts"):
+    # 縦スクロール用のショート候補を返す
+    instances = list(INVIDIOUS_INSTANCES)
+    random.shuffle(instances)
+    params = {"q": f"{q} #shorts", "type": "video"}
+    for inst in instances[:4]:
+        try:
+            resp = await client_session.get(f"{inst.rstrip('/')}/api/v1/search", params=params, timeout=4.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                items = [{
+                    "videoId": it.get("videoId"),
+                    "title": it.get("title"),
+                    "author": it.get("author"),
+                    "lengthSeconds": it.get("lengthSeconds", 0),
+                } for it in data if it.get("type") == "video" and it.get("videoId") and (it.get("lengthSeconds") or 0) <= 90]
+                if items:
+                    return items
+        except Exception:
+            continue
+    return []
+
+@app.get("/api/short_src")
+async def api_short_src(v: str):
+    try:
+        data = await fetch_invidious(f"/videos/{v}")
+        url = None
+        for fmt in data.get("formatStreams", []):
+            url = fmt.get("url")
+            if url: break
+        if not url:
+            for fmt in data.get("adaptiveFormats", []):
+                if "video" in fmt.get("type", ""):
+                    url = fmt.get("url"); break
+        return {"url": url, "title": data.get("title"), "author": data.get("author")}
+    except Exception:
+        return {"url": None}
 
 @app.get("/search", response_class=HTMLResponse)
 async def search(request: Request, q: str = Query(...), page: int = 1, type: str = "video", force_instance: str = Query(None)):
@@ -410,6 +489,10 @@ async def thumbnail(v: str):
 @app.get("/games", response_class=HTMLResponse)
 async def read_games(request: Request):
     return templates.TemplateResponse("games.html", {"request": request})
+
+@app.get("/tools", response_class=HTMLResponse)
+async def read_tools(request: Request):
+    return templates.TemplateResponse("tools.html", {"request": request})
 
 @app.get("/block.html", response_class=HTMLResponse)
 async def read_block(request: Request):
